@@ -5,14 +5,7 @@
 #include <cstdlib>
 
 #include "myio.h"
-
 #include "spmv.h"
-
-double timer(void) {
-  struct timeval timeval_time;
-  gettimeofday(&timeval_time,NULL);
-  return (double)timeval_time.tv_sec + (double)timeval_time.tv_usec*1e-6;
-}
 
 int main(int argc, char** argv)
 {
@@ -21,18 +14,8 @@ int main(int argc, char** argv)
   typedef float mnum_type;
   // typedef float vnum_type;
 
-  int N = 1000000;
-  int N_iter = 20;
-  int nnzprow = 200;
+  int N = 10;
 
-  if(argc > 1) {
-    sscanval(argv[1],N);
-    if(argc > 2) {
-      sscanval(argv[2],N_iter);
-      if(argc > 3)
-        sscanval(argv[3],nnzprow);
-    }
-  }
 
   std::cout << "Using ";
   if(sizeof(mnum_type) == 4) std::cout << "floats";
@@ -51,22 +34,25 @@ int main(int argc, char** argv)
   unsigned int nnz = 0;
 
   for(int i = 0; i < N; ++i) {
-    rows_val[i].reserve(nnzprow);
-    rows_ind[i].reserve(nnzprow);
-
-    int jstart = i-(nnzprow/2);
-    int jend = i+(nnzprow/2);
-    if(jstart < 0) jstart = 0;
-    if(jend > N) jend = N;
-
-    for(int j = jstart; j < jend; ++j) {
-      rows_val[i].push_back((i+j)/double(N));
+    for(int j = 0; j < N; ++j) {
+      rows_val[i].push_back(i*N+j);
       rows_ind[i].push_back(j);
     }
 
     nnz += rows_val[i].size();
   }
   // printf(" done!\n");
+
+  printf("Matrix:\n");
+  for(int i = 0; i < N; ++i) {
+    printf("[");
+    for(int j = 0; j < N; ++j) {
+      printf("%4.2g",rows_val[i][j]);
+    }
+    printf("]\n");
+  }
+
+
 
   std::cout << "Non-zeros: " << nnz << std::endl;
 
@@ -105,7 +91,7 @@ int main(int argc, char** argv)
   vnum_type *vec = new vnum_type[N];
   vnum_type *res = new vnum_type[N];
   for(int i = 0; i < N; ++i)
-    vec[i] = 1.3;
+    vec[i] = 1.0;
 
   long vec_byte = N*sizeof(vnum_type);
   std::cout << "Size of (one) vector: "
@@ -117,18 +103,15 @@ int main(int argc, char** argv)
 
 
   // perform multiplications
-  float tmin = 1000000000;
-  double t1;
+  mult(res,vec,val,ind,ptr,N);
 
-  for(int i = 0; i < N_iter; ++i) {
-    t1 = timer();
-    mult(res,vec,val,ind,ptr,N);
-    t1 = timer()-t1;
-    tmin = tmin < t1 ? tmin : t1;
+  printf("result: [");
+
+  for(int j = 0; j < N; ++j) {
+    printf("%5.3g",res[j]);
   }
-  std::cout << "Wall time: " <<  tmin << " s" << std::endl;
-  std::cout << "Bandwidth: " << datasize_mb*1e-3/tmin << " GB/s" << std::endl;
-  std::cout << "Compute:   " << 1e-9*gflop/tmin  << " Gflop/s" << std::endl;
+  printf("]\n");
+
 
   delete[] vec;
   delete[] res;

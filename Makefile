@@ -1,13 +1,17 @@
 
 CXX=g++
 CXXFLAGS= -Wall -march=native --std=c++11 -fopenmp -O3
-PROG=bmark_spmv
+BMPROG=bmark_spmv
+TESTPROG=test_spmv
 
-default: $(PROG)
+default: $(BMPROG)
 
 
-$(PROG): $(PROG).cpp
+$(BMPROG): $(BMPROG).cpp
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+$(TESTPROG): $(TESTPROG).cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 clean:
-	$(RM) $(PROGS)
+	$(RM) $(BMPROG) $(TESTPROG)
